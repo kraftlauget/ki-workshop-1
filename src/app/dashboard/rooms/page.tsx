@@ -1,44 +1,121 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { FilterBar } from '@/components/ui/filter-bar'
+import { RoomCard } from '@/components/RoomCard'
+import { Badge } from '@/components/ui/badge'
+import { Grid, List, SlidersHorizontal } from 'lucide-react'
 import Link from 'next/link'
-
-interface Room {
-  id: string
-  name: string
-  capacity: number
-  created_at: string
-}
+import { 
+  getRooms, 
+  getRoomLocations, 
+  getRoomEquipment, 
+  getRoomFeatures,
+  getRoomCapacityRange 
+} from '@/lib/api/rooms'
+import type { Room, RoomFilters } from '@/types/database'
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([])
+  const [filteredRooms, setFilteredRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Filter and view states
+  const [filters, setFilters] = useState<RoomFilters>({})
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  
+  // Filter options
+  const [locations, setLocations] = useState<string[]>([])
+  const [equipment, setEquipment] = useState<string[]>([])
+  const [features, setFeatures] = useState<string[]>([])
+  const [capacityRange, setCapacityRange] = useState({ min: 1, max: 20 })
 
   useEffect(() => {
-    fetchRooms()
+    fetchRoomsAndFilters()
   }, [])
 
-  const fetchRooms = async () => {
+  useEffect(() => {
+    applyFilters()
+  }, [rooms, filters])
+
+  const fetchRoomsAndFilters = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('*')
-        .order('name')
+      
+      const [
+        roomsData,
+        locationsData,
+        equipmentData,
+        featuresData,
+        capacityData
+      ] = await Promise.all([
+        getRooms(),
+        getRoomLocations(),
+        getRoomEquipment(),
+        getRoomFeatures(),
+        getRoomCapacityRange()
+      ])
 
-      if (error) {
-        setError(error.message)
-      } else {
-        setRooms(data || [])
-      }
-    } catch (err) {
-      setError('Failed to fetch rooms')
+      setRooms(roomsData)
+      setLocations(locationsData)
+      setEquipment(equipmentData)
+      setFeatures(featuresData)
+      setCapacityRange(capacityData)
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch rooms')
     } finally {
       setLoading(false)
     }
+  }
+
+  const applyFilters = () => {
+    let filtered = [...rooms]
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase()
+      filtered = filtered.filter(room =>
+        room.name.toLowerCase().includes(searchTerm) ||
+        room.description?.toLowerCase().includes(searchTerm) ||
+        room.location?.toLowerCase().includes(searchTerm)
+      )
+    }
+
+    // Apply capacity filters
+    if (filters.capacity_min) {
+      filtered = filtered.filter(room => room.capacity >= filters.capacity_min!)
+    }
+    if (filters.capacity_max) {
+      filtered = filtered.filter(room => room.capacity <= filters.capacity_max!)
+    }
+
+    // Apply location filter
+    if (filters.location) {
+      filtered = filtered.filter(room => room.location === filters.location)
+    }
+
+    // Apply floor filter
+    if (filters.floor) {
+      filtered = filtered.filter(room => room.floor === filters.floor)
+    }
+
+    // Apply equipment filter
+    if (filters.equipment && filters.equipment.length > 0) {
+      filtered = filtered.filter(room =>
+        filters.equipment!.every(eq => room.equipment?.includes(eq))
+      )
+    }
+
+    // Apply features filter
+    if (filters.features && filters.features.length > 0) {
+      filtered = filtered.filter(room =>
+        filters.features!.every(feat => room.features?.includes(feat))
+      )
+    }
+
+    setFilteredRooms(filtered)
   }
 
   if (loading) {
@@ -59,50 +136,98 @@ export default function RoomsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Meeting Rooms</h1>
           <p className="text-gray-600">Browse available meeting rooms and book one for your meeting.</p>
         </div>
-        <Link href="/dashboard/book">
-          <Button>Book a Room</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* View toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="p-2"
+            >
+              <Grid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="p-2"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <Link href="/dashboard/book">
+            <Button>Book a Room</Button>
+          </Link>
+        </div>
       </div>
 
-      {rooms.length === 0 ? (
+      {/* Filter Bar */}
+      <FilterBar
+        filters={filters}
+        onFiltersChange={setFilters}
+        locations={locations}
+        equipment={equipment}
+        features={features}
+        capacityRange={capacityRange}
+      />
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">
+            {filteredRooms.length} of {rooms.length} rooms
+          </span>
+          {Object.keys(filters).length > 0 && (
+            <Badge variant="secondary">
+              Filtered
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Room Display */}
+      {filteredRooms.length === 0 ? (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No rooms available</h3>
-          <p className="mt-1 text-sm text-gray-500">No meeting rooms have been set up yet.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            {Object.keys(filters).length > 0 ? 'No rooms match your filters' : 'No rooms available'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {Object.keys(filters).length > 0 
+              ? 'Try adjusting your search criteria or clearing filters.' 
+              : 'No meeting rooms have been set up yet.'}
+          </p>
+          {Object.keys(filters).length > 0 && (
+            <div className="mt-4">
+              <Button variant="outline" onClick={() => setFilters({})}>
+                Clear all filters
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((room) => (
-            <div key={room.id} className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900">{room.name}</h3>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {room.capacity} seats
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center text-sm text-gray-500">
-                  <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Capacity: {room.capacity} people
-                </div>
-                <div className="mt-6">
-                  <Link href={`/dashboard/book?room=${room.id}`}>
-                    <Button className="w-full">
-                      Book This Room
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+        <div className={
+          viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            : "space-y-4"
+        }>
+          {filteredRooms.map((room) => (
+            <RoomCard 
+              key={room.id} 
+              room={room} 
+              compact={viewMode === 'list'}
+              showQuickBook={true}
+            />
           ))}
         </div>
       )}
