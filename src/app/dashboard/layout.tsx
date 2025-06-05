@@ -44,6 +44,12 @@ export default function DashboardLayout({
               </Link>
               <div className="hidden sm:flex space-x-4">
                 <Link 
+                  href="/dashboard/calendar" 
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Calendar
+                </Link>
+                <Link 
                   href="/dashboard/rooms" 
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >

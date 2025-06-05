@@ -7,7 +7,7 @@ import type {
   UpdateBookingRequest 
 } from '@/types/database'
 
-export async function createBooking(data: BookingFormData, userId: string): Promise<string> {
+export async function createBookingFromForm(data: BookingFormData, userId: string): Promise<string> {
   const startDateTime = `${data.start_date}T${data.start_time}:00`
   const endDateTime = `${data.end_date}T${data.end_time}:00`
 
@@ -312,6 +312,50 @@ export async function getUserBookingStats(userId: string): Promise<{
 }
 
 // Quick booking function for immediate time slots
+// Simple create booking function for quick modal bookings
+export async function createBooking(data: CreateBookingRequest): Promise<string> {
+  // Get current user from session
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('User not authenticated')
+  }
+
+  // Validate that end time is after start time
+  if (new Date(data.end_time) <= new Date(data.start_time)) {
+    throw new Error('End time must be after start time')
+  }
+
+  // Check for conflicts first
+  const { data: conflictData, error: conflictError } = await supabase
+    .rpc('check_booking_conflict', {
+      p_room_id: data.room_id,
+      p_start_time: data.start_time,
+      p_end_time: data.end_time
+    })
+
+  if (conflictError) throw conflictError
+
+  if (conflictData) {
+    throw new Error('Room is not available for the selected time')
+  }
+
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .insert({
+      room_id: data.room_id,
+      user_id: user.id,
+      title: data.title || null,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      status: 'confirmed'
+    })
+    .select('id')
+    .single()
+
+  if (error) throw error
+  return booking.id
+}
+
 export async function createQuickBooking(
   roomId: string,
   userId: string,
