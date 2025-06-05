@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getRooms } from '@/lib/api/rooms'
 import { getRoomBookings } from '@/lib/api/bookings'
+import { useRealtimeCalendar } from './useRealtimeBookings'
 import { getCurrentWeek, navigateWeek, generateTimeSlots, createSlotDateTime, isBookingInSlot, getBookingPosition, getBookingHeight } from '@/lib/calendar-utils'
 import type { Room, ExtendedBooking } from '@/types/database'
 import type { CalendarWeek, CalendarRoom, CalendarDay, CalendarTimeSlot, CalendarBooking, CalendarViewState } from '@/types/calendar'
@@ -32,11 +33,7 @@ export function useCalendarState(): UseCalendarStateReturn {
 
   const timeSlots = useMemo(() => generateTimeSlots(), [])
 
-  useEffect(() => {
-    fetchCalendarData()
-  }, [viewState.currentWeek])
-
-  const fetchCalendarData = async () => {
+  const fetchCalendarData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -58,7 +55,14 @@ export function useCalendarState(): UseCalendarStateReturn {
     } finally {
       setLoading(false)
     }
-  }
+  }, [viewState.currentWeek])
+
+  useEffect(() => {
+    fetchCalendarData()
+  }, [fetchCalendarData])
+
+  // Enable real-time updates for calendar
+  useRealtimeCalendar(fetchCalendarData)
 
   const fetchWeekBookings = async (startDate: string, endDate: string): Promise<ExtendedBooking[]> => {
     // For now, we'll fetch all bookings and filter client-side
