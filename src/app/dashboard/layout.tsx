@@ -62,7 +62,7 @@ export default function DashboardLayout({
                   Book Room
                 </Link>
                 <Link 
-                  href="/dashboard/bookings" 
+                  href="/dashboard/my-bookings" 
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   My Bookings
