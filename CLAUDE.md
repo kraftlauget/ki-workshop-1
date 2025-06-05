@@ -4,13 +4,13 @@
 
 1. **Clarify → Offer → Decide ("C‑O‑D" loop)**
 
-   - _Clarify_: If you are < 100 % certain about any requirement, filename, or domain assumption, stop and ask a short, pointed question.
-   - _Offer_: When a new feature or refactor is requested, propose **2–3 viable approaches** (with one‑sentence pros/cons) and wait for a green‑light.
-   - _Decide_: Only implement after the user (or tests) confirms the chosen approach.
+   - _Clarify_: If uncertain about requirements, ask a short, pointed question.
+   - _Offer_: Propose 2–3 design options when it makes sense to discuss the approach (complex features, architectural decisions).
+   - _Decide_: Implement after confirmation, or proceed directly for obvious tasks.
 
 2. **Small, Self‑Contained Units**
 
-   - Functions ≤ 75 LOC, classes ≤ 400 LOC, modules ≤ 600 LOC.
+   - Functions ≤ 75 LOC, classes ≤ 400 LOC, modules ≤ 600 LOC.
    - Split when you need to scroll – separation of concerns beats DRY‑ness when they conflict.
    - Be pragmatic when facing existing code. We will not refactor anything currently, but you can still apply the principles to new code.
 
@@ -26,15 +26,48 @@
 
 ## 1. Project Structure Overview
 
-<FILL THIS OUT>
+**Tech Stack**: Next.js 15 + TypeScript + Tailwind CSS + Supabase + shadcn/ui
+
+### Core Directories
+
+- **`src/app/`** – Next.js App Router pages, layouts, and route handlers
+
+  - `layout.tsx` – Root layout with global styles
+  - `page.tsx` – Homepage component
+  - `globals.css` – Global Tailwind styles
+
+- **`src/components/`** – Reusable React components
+
+  - `ui/` – shadcn/ui component library (button.tsx, etc.)
+
+- **`src/lib/`** – Utility functions and external integrations
+
+  - `supabase.ts` – Supabase client configuration
+  - `utils.ts` – General utility functions (cn, etc.)
+
+- **`public/`** – Static assets (SVGs, images)
+
+### Key Config Files
+
+- `components.json` – shadcn/ui configuration (New York style, RSC enabled)
+- `next.config.ts` – Next.js configuration
+- `tsconfig.json` – TypeScript config with `@/*` path aliases
+- `tailwind.config.*` – Tailwind CSS configuration
+- `env.example` – Environment variable template for Supabase
+
+### Development
+
+- **Dev Server**: `npm run dev` (uses Turbopack)
+- **Build**: `npm run build`
+- **Lint**: `npm run lint` (ESLint + Next.js rules)
 
 ## 2. Assistant Operating Manual
 
-| Phase       | What You Must Do                                                                                                                                |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Clarify** | • Ask ≤ 3 crisp questions if context is missing.<br>• Point to filenames/lines by path when relevant.                                           |
-| **Offer**   | • Draft a markdown plan – bullet actions, affected files, rough LOC.<br>• List 2–3 design options with pros/cons and highlight your preference. |
-| **Decide**  | • Wait for user ✔️ or ✖️.<br>• If ✔️, write code according to best practices in .NET, commit using conventional‑commits style.                  |
+| Phase       | What You Must Do                                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clarify** | • Ask ≤ 3 crisp questions if context is missing Point to filenames/lines by path when relevant.                                        |
+| **Offer**   | • For complex tasks: draft plan with affected files.Propose design options when approach isn't obvious.                                |
+| **Decide**  | • Wait for user ✔️ or ✖️.< If ✔️, write code according to best practices in TypeScript/React, commit using conventional‑commits style. |
 
 ## 3. When You're Unsure – Checklist 🟡
 
@@ -59,8 +92,8 @@ Choose the leanest option that satisfies current requirements; defer gold‑plat
 
 ## 5. Absolute "Don'ts"
 
-- Don't generate files > 600 LOC or functions > 75 LOC.
+- Don't generate files > 600 LOC or functions > 75 LOC.
 - Don't introduce a new dependency without asking.
 - Don't commit failing tests.
 - Don't leave placeholders without a follow‑up issue.
-- Don't write "created by claude" in commit messages.
+
