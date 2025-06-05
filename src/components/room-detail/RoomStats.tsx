@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Clock, TrendingUp, Calendar, Activity } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getRoomUtilization } from '@/lib/api/rooms'
@@ -15,11 +15,7 @@ export function RoomStats({ roomId }: RoomStatsProps) {
   const [monthlyStats, setMonthlyStats] = useState<RoomUtilization | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchStats()
-  }, [roomId])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -47,7 +43,11 @@ export function RoomStats({ roomId }: RoomStatsProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roomId])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   if (loading) {
     return (

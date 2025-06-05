@@ -50,7 +50,7 @@ export default function BookRoomPage() {
       } else {
         setRooms(data || [])
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch rooms')
     }
   }
@@ -116,8 +116,8 @@ export default function BookRoomPage() {
           router.push('/dashboard/bookings')
         }, 1500)
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create booking')
+    } catch (error) {
+      setError((error as Error).message || 'Failed to create booking')
     } finally {
       setLoading(false)
     }

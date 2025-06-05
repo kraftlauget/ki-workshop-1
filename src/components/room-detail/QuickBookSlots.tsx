@@ -24,29 +24,6 @@ export function QuickBookSlots({ roomId, onQuickBook }: QuickBookSlotsProps) {
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    findAvailableSlots()
-  }, [roomId])
-
-  // Enable real-time updates for available slots
-  useRealtimeBookings({
-    onBookingInsert: (booking) => {
-      if (booking.room_id === roomId) {
-        findAvailableSlots()
-      }
-    },
-    onBookingUpdate: (booking) => {
-      if (booking.room_id === roomId) {
-        findAvailableSlots()
-      }
-    },
-    onBookingDelete: (booking) => {
-      if (booking.room_id === roomId) {
-        findAvailableSlots()
-      }
-    }
-  })
-
   const findAvailableSlots = useCallback(async () => {
     try {
       setLoading(true)
@@ -113,6 +90,29 @@ export function QuickBookSlots({ roomId, onQuickBook }: QuickBookSlotsProps) {
       setLoading(false)
     }
   }, [roomId])
+
+  useEffect(() => {
+    findAvailableSlots()
+  }, [findAvailableSlots])
+
+  // Enable real-time updates for available slots
+  useRealtimeBookings({
+    onBookingInsert: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    },
+    onBookingUpdate: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    },
+    onBookingDelete: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    }
+  })
 
   const handleQuickBook = (slot: AvailableSlot) => {
     onQuickBook?.(roomId, slot.startTime, slot.duration)

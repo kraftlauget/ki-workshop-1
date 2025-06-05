@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Clock, TrendingUp, MapPin, Users, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -37,16 +37,7 @@ export default function MyBookingsPage() {
     booking: ExtendedBooking | null
   }>({ open: false, booking: null })
 
-  useEffect(() => {
-    if (user) {
-      fetchUserData()
-    }
-  }, [user])
-
-  // Enable real-time updates for user's bookings
-  useRealtimeUserBookings(user?.id || '', fetchUserData)
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!user) return
 
     try {
@@ -67,7 +58,16 @@ export default function MyBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData()
+    }
+  }, [user, fetchUserData])
+
+  // Enable real-time updates for user's bookings
+  useRealtimeUserBookings(user?.id || '', fetchUserData)
 
   const handleEditBooking = (booking: ExtendedBooking) => {
     setEditModal({ open: true, booking })

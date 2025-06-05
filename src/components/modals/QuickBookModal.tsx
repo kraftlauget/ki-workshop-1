@@ -18,6 +18,7 @@ import { toast } from '@/components/ui/toast'
 import { createBooking } from '@/lib/api/bookings'
 import { getRoomById } from '@/lib/api/rooms'
 import { formatTime } from '@/lib/calendar-utils'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Room } from '@/types/database'
 
 interface QuickBookModalProps {
@@ -37,6 +38,7 @@ export function QuickBookModal({
   duration = 60,
   onSuccess
 }: QuickBookModalProps) {
+  const { user } = useAuth()
   const [room, setRoom] = useState<Room | null>(null)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -80,9 +82,11 @@ export function QuickBookModal({
 
       await createBooking({
         room_id: roomId,
+        user_id: user!.id,
         title: formData.title.trim(),
         start_time: bookingStart.toISOString(),
-        end_time: bookingEnd.toISOString()
+        end_time: bookingEnd.toISOString(),
+        status: 'confirmed'
       })
 
       // Reset form

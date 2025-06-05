@@ -20,7 +20,7 @@ const Select = ({ children, value, onValueChange }: {
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
           return React.cloneElement(child, {
-            ...child.props,
+            ...(child.props as Record<string, any>),
             isOpen,
             setIsOpen,
             selectedValue,
@@ -70,7 +70,7 @@ const SelectContent = ({ children, isOpen, onValueChange }: {
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
           return React.cloneElement(child, {
-            ...child.props,
+            ...(child.props as Record<string, any>),
             onValueChange
           })
         }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, Clock } from 'lucide-react'
 import Link from 'next/link'
@@ -29,11 +29,7 @@ export default function RoomDetailPage() {
     duration?: number
   }>({ open: false })
 
-  useEffect(() => {
-    fetchRoom()
-  }, [roomId])
-
-  const fetchRoom = async () => {
+  const fetchRoom = useCallback(async () => {
     try {
       setLoading(true)
       const roomData = await getRoomById(roomId)
@@ -49,7 +45,11 @@ export default function RoomDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roomId])
+
+  useEffect(() => {
+    fetchRoom()
+  }, [fetchRoom])
 
   const handleQuickBook = (roomId: string, dateTime: string, duration: number = 60) => {
     setQuickBookModal({

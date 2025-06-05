@@ -2,8 +2,22 @@
 
 import { ChevronLeft, ChevronRight, Calendar, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { formatWeekRange } from '@/lib/calendar-utils'
 import type { CalendarWeek } from '@/types/calendar'
+
+// Helper function to format week range
+function formatCalendarWeekRange(week: CalendarWeek): string {
+  const startMonth = week.weekStart.toLocaleDateString('en-US', { month: 'short' })
+  const startDay = week.weekStart.getDate()
+  const endMonth = week.weekEnd.toLocaleDateString('en-US', { month: 'short' })
+  const endDay = week.weekEnd.getDate()
+  const year = week.weekEnd.getFullYear()
+  
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay} - ${endDay}, ${year}`
+  } else {
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`
+  }
+}
 
 interface CalendarHeaderProps {
   week: CalendarWeek | null
@@ -55,7 +69,7 @@ export function CalendarHeader({
         </Button>
 
         <div className="text-lg font-semibold text-gray-900">
-          {week ? formatWeekRange(week) : 'Loading...'}
+          {week ? formatCalendarWeekRange(week) : 'Loading...'}
         </div>
       </div>
 

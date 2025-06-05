@@ -18,9 +18,22 @@ export function TodayTimeline({ roomId, onQuickBook }: TodayTimelineProps) {
   const [bookings, setBookings] = useState<ExtendedBooking[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchTodayBookings = useCallback(async () => {
+    try {
+      setLoading(true)
+      const today = new Date().toISOString().split('T')[0]
+      const todayBookings = await getRoomBookings(roomId, today, today)
+      setBookings(todayBookings)
+    } catch (error) {
+      console.error('Error fetching today bookings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [roomId])
+
   useEffect(() => {
     fetchTodayBookings()
-  }, [roomId])
+  }, [fetchTodayBookings])
 
   // Enable real-time updates for room bookings
   useRealtimeBookings({
@@ -40,19 +53,6 @@ export function TodayTimeline({ roomId, onQuickBook }: TodayTimelineProps) {
       }
     }
   })
-
-  const fetchTodayBookings = useCallback(async () => {
-    try {
-      setLoading(true)
-      const today = new Date().toISOString().split('T')[0]
-      const todayBookings = await getRoomBookings(roomId, today, today)
-      setBookings(todayBookings)
-    } catch (error) {
-      console.error('Error fetching today bookings:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [roomId])
 
   const timeSlots = generateTimeSlots()
   const today = new Date()
