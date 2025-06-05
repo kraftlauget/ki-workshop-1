@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { EditBookingModal } from '@/components/modals/EditBookingModal'
 import { CancelBookingModal } from '@/components/modals/CancelBookingModal'
+import { useRealtimeUserBookings } from '@/hooks/useRealtimeBookings'
 import { getUserBookings, getUserBookingStats } from '@/lib/api/bookings'
 import { useAuth } from '@/contexts/AuthContext'
 import type { ExtendedBooking } from '@/types/database'
@@ -41,6 +42,9 @@ export default function MyBookingsPage() {
       fetchUserData()
     }
   }, [user])
+
+  // Enable real-time updates for user's bookings
+  useRealtimeUserBookings(user?.id || '', fetchUserData)
 
   const fetchUserData = async () => {
     if (!user) return

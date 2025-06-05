@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { ToastContainer } from '@/components/ui/toast'
 
 export default function DashboardLayout({
   children,
@@ -91,6 +92,9 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+      
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/toast'
 import { updateBooking } from '@/lib/api/bookings'
 import { formatTime } from '@/lib/calendar-utils'
 import type { ExtendedBooking } from '@/types/database'
@@ -79,10 +80,22 @@ export function EditBookingModal({
       })
 
       onOpenChange(false)
+      
+      // Show success toast
+      toast({
+        type: 'success',
+        title: 'Booking Updated!',
+        message: `${formData.title} has been updated successfully.`
+      })
+      
       onSuccess?.()
     } catch (error: any) {
       console.error('Error updating booking:', error)
-      alert(error.message || 'Failed to update booking. Please try again.')
+      toast({
+        type: 'error',
+        title: 'Update Failed',
+        message: error.message || 'Failed to update booking. Please try again.'
+      })
     } finally {
       setLoading(false)
     }

@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { toast } from '@/components/ui/toast'
 import { createBooking } from '@/lib/api/bookings'
 import { getRoomById } from '@/lib/api/rooms'
 import { formatTime } from '@/lib/calendar-utils'
@@ -87,10 +88,22 @@ export function QuickBookModal({
       // Reset form
       setFormData({ title: '', description: '', duration: 60 })
       onOpenChange(false)
+      
+      // Show success toast
+      toast({
+        type: 'success',
+        title: 'Booking Created!',
+        message: `${formData.title} has been booked successfully.`
+      })
+      
       onSuccess?.()
     } catch (error: any) {
       console.error('Error creating booking:', error)
-      alert(error.message || 'Failed to create booking. Please try again.')
+      toast({
+        type: 'error',
+        title: 'Booking Failed',
+        message: error.message || 'Failed to create booking. Please try again.'
+      })
     } finally {
       setSubmitting(false)
     }

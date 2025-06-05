@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { cancelBooking } from '@/lib/api/bookings'
 import { formatTime } from '@/lib/calendar-utils'
 import type { ExtendedBooking } from '@/types/database'
@@ -36,10 +37,22 @@ export function CancelBookingModal({
       setLoading(true)
       await cancelBooking(booking.id, booking.user_id)
       onOpenChange(false)
+      
+      // Show success toast
+      toast({
+        type: 'success',
+        title: 'Booking Cancelled',
+        message: `${booking.title || 'Meeting'} has been cancelled successfully.`
+      })
+      
       onSuccess?.()
     } catch (error: any) {
       console.error('Error cancelling booking:', error)
-      alert(error.message || 'Failed to cancel booking. Please try again.')
+      toast({
+        type: 'error',
+        title: 'Cancellation Failed',
+        message: error.message || 'Failed to cancel booking. Please try again.'
+      })
     } finally {
       setLoading(false)
     }

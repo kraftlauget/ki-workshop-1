@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { checkRoomAvailableAt } from '@/lib/api/rooms'
+import { useRealtimeBookings } from '@/hooks/useRealtimeBookings'
 import { formatTime } from '@/lib/calendar-utils'
 
 interface QuickBookSlotsProps {
@@ -27,7 +28,26 @@ export function QuickBookSlots({ roomId, onQuickBook }: QuickBookSlotsProps) {
     findAvailableSlots()
   }, [roomId])
 
-  const findAvailableSlots = async () => {
+  // Enable real-time updates for available slots
+  useRealtimeBookings({
+    onBookingInsert: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    },
+    onBookingUpdate: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    },
+    onBookingDelete: (booking) => {
+      if (booking.room_id === roomId) {
+        findAvailableSlots()
+      }
+    }
+  })
+
+  const findAvailableSlots = useCallback(async () => {
     try {
       setLoading(true)
       const now = new Date()
@@ -92,7 +112,7 @@ export function QuickBookSlots({ roomId, onQuickBook }: QuickBookSlotsProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roomId])
 
   const handleQuickBook = (slot: AvailableSlot) => {
     onQuickBook?.(roomId, slot.startTime, slot.duration)

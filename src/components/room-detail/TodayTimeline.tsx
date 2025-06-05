@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Clock, User, Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getRoomBookings } from '@/lib/api/bookings'
+import { useRealtimeBookings } from '@/hooks/useRealtimeBookings'
 import { generateTimeSlots, formatTime, isBookingInSlot, type TimeSlot } from '@/lib/calendar-utils'
 import type { ExtendedBooking } from '@/types/database'
 
@@ -21,7 +22,26 @@ export function TodayTimeline({ roomId, onQuickBook }: TodayTimelineProps) {
     fetchTodayBookings()
   }, [roomId])
 
-  const fetchTodayBookings = async () => {
+  // Enable real-time updates for room bookings
+  useRealtimeBookings({
+    onBookingInsert: (booking) => {
+      if (booking.room_id === roomId) {
+        fetchTodayBookings()
+      }
+    },
+    onBookingUpdate: (booking) => {
+      if (booking.room_id === roomId) {
+        fetchTodayBookings()
+      }
+    },
+    onBookingDelete: (booking) => {
+      if (booking.room_id === roomId) {
+        fetchTodayBookings()
+      }
+    }
+  })
+
+  const fetchTodayBookings = useCallback(async () => {
     try {
       setLoading(true)
       const today = new Date().toISOString().split('T')[0]
@@ -32,7 +52,7 @@ export function TodayTimeline({ roomId, onQuickBook }: TodayTimelineProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [roomId])
 
   const timeSlots = generateTimeSlots()
   const today = new Date()
